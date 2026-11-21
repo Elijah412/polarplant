@@ -789,5 +789,3 @@ with tab3:
                     st.caption("UTF-8-SIG 인코딩으로 저장되어 엑셀에서도 한글이 깨지지 않아요.")
     except Exception as e:
         st.warning(f"⚠️ 이 부분은 데이터 형식 때문에 표시하지 못했어요: {e}")
-        if __name__ == "__main__":
-    st.run()
