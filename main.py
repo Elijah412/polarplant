@@ -1,4 +1,4 @@
-# main.py — 구문 오류 수정본
+# main.py
 import io
 import os
 import numpy as np
@@ -6,6 +6,7 @@ import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
 
 # ──────────────────────────────────────────────
 # 데이터 로딩 & 표준화
@@ -22,6 +23,7 @@ def load_csv(file):
         except Exception:
             pass
     return pd.DataFrame()
+
 
 def std_cols(df):
     df = df.copy()
@@ -74,11 +76,13 @@ def std_cols(df):
         df["time"] = parsed
     return df
 
+
 def school_name(file):
     if file is None:
         return "학교"
     base = os.path.splitext(os.path.basename(file.name))[0]
     return base.replace("_", " ").replace("-", " ")
+
 
 def scatter_trend(x, y, xlabel, ylabel, color="#1f77b4"):
     df = pd.DataFrame({"x": x, "y": y}).dropna()
@@ -86,7 +90,8 @@ def scatter_trend(x, y, xlabel, ylabel, color="#1f77b4"):
         return None
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=df["x"], y=df["y"],
+        x=df["x"],
+        y=df["y"],
         mode="markers",
         marker=dict(size=8, color=color, opacity=0.75),
         hovertemplate=f"{xlabel}: %{{x:.2f}}<br>{ylabel}: %{{y:.2f}}<extra></extra>",
@@ -94,7 +99,8 @@ def scatter_trend(x, y, xlabel, ylabel, color="#1f77b4"):
     slope, intercept = np.polyfit(df["x"], df["y"], 1)
     xs = np.linspace(df["x"].min(), df["x"].max(), 100)
     fig.add_trace(go.Scatter(
-        x=xs, y=slope * xs + intercept,
+        x=xs,
+        y=slope * xs + intercept,
         mode="lines",
         line=dict(color="#d62728", width=2.5),
         name=f"추세선 (기울기={slope:.3f})",
@@ -108,6 +114,7 @@ def scatter_trend(x, y, xlabel, ylabel, color="#1f77b4"):
         hovermode="closest",
     )
     return fig
+
 
 # ──────────────────────────────────────────────
 # 메인 앱
@@ -249,9 +256,7 @@ with tab3:
                 gf = growth_df[avail + ["개체번호"]].dropna().copy()
                 calc_cols = [c for c in avail if c != "개체번호"]
 
-                # ──────────────────────────────────────────
-                # 섹션 A: 핵심 질문별 상관 분석
-                # ──────────────────────────────────────────
+                # ── 섹션 A: 핵심 질문별 상관 분석 ──────
                 st.header("① 핵심 질문별 상관 분석")
 
                 st.info("""
@@ -262,7 +267,6 @@ with tab3:
 ※ 상관계수가 높다고 해서 원인-결과 관계(인과관계)는 아니에요.
 """)
 
-                # A-1. 잎 수 ↔ 생중량
                 if "잎 수" in calc_cols and "생중량" in calc_cols:
                     n = gf[["잎 수", "생중량"]].dropna()
                     if len(n) >= 2:
@@ -281,7 +285,6 @@ with tab3:
                             st.info(f"**잎 수와 생중량**은 {desc}(r = {r:.3f}) 관계예요. "
                                     f"잎이 많을수록 전체 질량도 커지는 경향이 뚜렷하게 나타납니다.")
 
-                # A-2. 지상부 길이 ↔ 생중량 (+ 잎 수와 비교)
                 if "지상부 길이" in calc_cols and "생중량" in calc_cols:
                     n2 = gf[["지상부 길이", "생중량"]].dropna()
                     if len(n2) >= 2:
@@ -296,8 +299,6 @@ with tab3:
                             c1.caption(f"결정계수 R² = {r2sq:.3f}  "
                                        f"(지상부 길이로 생중량 변동의 {r2sq*100:.1f}% 설명 가능)")
                             c2.plotly_chart(fig2, width="stretch")
-                            desc2 = ("강한 양의 상관" if abs(r2v) >= 0.7 else
-                                     "중간 정도의 양의 상관" if abs(r2v) >= 0.4 else "약한 상관")
                             leaf_r_val = None
                             if "잎 수" in calc_cols:
                                 lr = gf[["잎 수", "생중량"]].dropna()
@@ -309,7 +310,6 @@ with tab3:
                                         f"**{stronger}**가 생중량과 더 밀접한 관계를 보여요. "
                                         f"길이보다 잎 수가 전체 질량을 잘 설명하는 지표입니다.")
 
-                # A-3. 지하부 질량 ↔ 지상부 질량 (가설 핵심)
                 if "지하부 질량" in calc_cols and "지상부 질량" in calc_cols:
                     n3 = gf[["지하부 질량", "지상부 질량"]].dropna()
                     if len(n3) >= 2:
@@ -328,7 +328,6 @@ with tab3:
                             elif abs(r3) >= 0.4:
                                 st.info(f"지하부 질량과 지상부 질량 사이에 **중간 정도의 양의 상관**(r = {r3:.3f})이 있어요.")
 
-                # A-4. 지하부 길이 ↔ 지상부 길이
                 if "지하부 길이" in calc_cols and "지상부 길이" in calc_cols:
                     n4 = gf[["지하부 길이", "지상부 길이"]].dropna()
                     if len(n4) >= 2:
@@ -348,7 +347,6 @@ with tab3:
                             else:
                                 st.info(f"지하부 길이와 지상부 길이 사이에 r = {r4:.3f}의 상관이 있어요.")
 
-                # A-5. 지상부 질량 ↔ 지하부 길이 (길이 vs 질량)
                 if "지상부 질량" in calc_cols and "지하부 길이" in calc_cols:
                     n5 = gf[["지상부 질량", "지하부 길이"]].dropna()
                     if len(n5) >= 2:
@@ -365,9 +363,7 @@ with tab3:
                                     f"질량끼리(예: r ≈ 0.8)일 때보다 훨씬 약해요. "
                                     f"**질량 기반 관계가 길이 기반 관계보다 훨씬 뚜렷**하다는 점을 확인할 수 있어요.")
 
-                # ──────────────────────────────────────────
-                # 섹션 B: 가설 검증 — 지하부 발달이 지상부 생장에 미치는 영향
-                # ──────────────────────────────────────────
+                # ── 섹션 B: 가설 검증 ──────────────────
                 st.header("② 가설 검증: 지하부 발달이 지상부 생장에 미치는 영향")
 
                 st.info("""
@@ -379,7 +375,6 @@ with tab3:
 3. **대표 사례 확인**: 잘 자란 개체와 덜 자란 개체의 구체적 수치 비교
 """)
 
-                # B-1. 상관계수 요약
                 st.subheader("B-1. 주요 상관계수 요약")
                 corr_pairs = [
                     ("지상부 질량", "지하부 질량"),
@@ -388,8 +383,7 @@ with tab3:
                     ("지상부 길이", "지하부 길이"),
                     ("지상부 질량", "지하부 길이"),
                 ]
-                valid_pairs = [(a, b) for a, b in corr_pairs
-                               if a in calc_cols and b in calc_cols]
+                valid_pairs = [(a, b) for a, b in corr_pairs if a in calc_cols and b in calc_cols]
                 if valid_pairs:
                     cdata = []
                     for a, b in valid_pairs:
@@ -427,7 +421,6 @@ with tab3:
                                    "길이끼리(지상부 길이↔지하부 길이) 관계는 거의 없어요. "
                                    "잎 수는 생장 상태를 잘 대표하는 지표예요.")
 
-                # B-2. 지하부 질량 중앙값 기준 그룹 비교
                 if "지하부 질량" in calc_cols and "지상부 질량" in calc_cols:
                     med_bw = gf["지하부 질량"].median()
                     good_g = gf[gf["지하부 질량"] > med_bw]
@@ -458,7 +451,6 @@ with tab3:
                                 })
                         if comp_rows:
                             st.dataframe(pd.DataFrame(comp_rows), width="stretch")
-                            # 가장 차이가 큰 항목 찾기 (비율 기준, float만 비교)
                             valid_ratios = [
                                 r for r in comp_rows
                                 if isinstance(r["평균 비율 (양호 / 부족)"], float)
@@ -476,7 +468,6 @@ with tab3:
                                         f"잎 수도 더 많아요. "
                                         f"**'뿌리가 많이 자란 개체가 지상부도 잘 자랐다'**는 패턴입니다.")
 
-                        # 대표 사례
                         st.subheader("B-2-a. 대표 사례 개체 확인")
                         cases = []
                         for aid in ["A14", "A48", "A36", "A17"]:
@@ -505,7 +496,6 @@ with tab3:
                             st.caption("A14·A48은 지하부 질량 양호 그룹(상위)으로 지상부 질량·잎 수가 크고, "
                                        "A36·A17은 지하부 질량 부족 그룹(하위)으로 모든 생육 지표가 낮아요.")
 
-                # B-3. 지하부 길이 기준 (참고)
                 if "지하부 길이" in calc_cols and "지상부 질량" in calc_cols:
                     med_bl = gf["지하부 길이"].median()
                     good_bl = gf[gf["지하부 길이"] > med_bl]
@@ -521,7 +511,6 @@ with tab3:
                                     f"지하부 길이는 지상부 길이와 상관이 거의 없으므로(r ≈ -0.026), "
                                     f"**길이보다 질량이 더 의미 있는 지표**예요.")
 
-                # B-4. 뿌리비율 기준 (참고)
                 if {"지하부 질량", "생중량"} <= set(gf.columns):
                     gf["뿌리비율"] = gf["지하부 질량"] / gf["생중량"]
                     med_rp = gf["뿌리비율"].median()
@@ -537,9 +526,7 @@ with tab3:
                                     f"약 {diff_rp:.2f}g로, **통계적으로 유의하지 않을 수 있어요**. "
                                     f"**'비율'보다 '절대적인 지하부 질량'**이 지상부 생장과 더 강하게 연결된다는 결과입니다.")
 
-                # ──────────────────────────────────────────
-                # 섹션 C: 종합 결론
-                # ──────────────────────────────────────────
+                # ── 섹션 C: 종합 결론 ──────────────────
                 st.header("③ 종합 결론")
 
                 st.success("""
@@ -574,9 +561,7 @@ with tab3:
 시간적 선후 관계까지 확인할 수 있어요.
 """)
 
-                # ──────────────────────────────────────────
-                # 섹션 D: 산점도 모음
-                # ──────────────────────────────────────────
+                # ── 섹션 D: 산점도 모음 ───────────────
                 st.header("④ 생육 지표 간 관계 — 산점도 모음")
 
                 pairs = [
@@ -619,9 +604,7 @@ with tab3:
                 else:
                     st.info("산점도를 만들 수 있는 생육 지표 쌍이 없어요.")
 
-                # ──────────────────────────────────────────
-                # 섹션 E: CSV 다운로드
-                # ──────────────────────────────────────────
+                # ── 섹션 E: CSV 다운로드 ───────────────
                 st.header("⑤ 데이터 다운로드")
                 if not growth_df.empty:
                     csv_bytes = growth_df.to_csv(index=False).encode("utf-8-sig")
@@ -634,6 +617,3 @@ with tab3:
                     st.caption("UTF-8-SIG 인코딩으로 저장되어 엑셀에서도 한글이 깨지지 않아요.")
     except Exception as e:
         st.warning(f"⚠️ 이 부분은 데이터 형식 때문에 표시하지 못했어요: {e}")
-
-if __name__ == "__main__":
-    st.run()
