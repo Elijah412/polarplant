@@ -504,7 +504,7 @@ with tab3:
                                 comp_df = pd.DataFrame(comp_rows)
                                 st.dataframe(comp_df, width="stretch")
                                 max_item = max(
-                                    [r for r in comp_rows if isinstance(r["평균 비율 (상위/하위)", float)],
+                                    [r for r in comp_rows if isinstance(r["평균 비율 (상위/하위)", float]),
                                     key=lambda r: r["평균 비율 (상위/하위)"],
                                     default=None,
                                 )
